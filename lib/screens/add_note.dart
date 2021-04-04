@@ -1,11 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:take_notes/data/databaseHelper.dart';
+import 'package:take_notes/models/note.dart';
 
 class AddNote extends StatefulWidget {
+  AddNote({this.note});
+  final Note note;
   @override
   _AddNoteState createState() => _AddNoteState();
 }
 
 class _AddNoteState extends State<AddNote> {
+  DbHelper _helper;
+  TextEditingController teTitle = TextEditingController();
+  TextEditingController teDesc = TextEditingController();
+  List<bool> isSelected = [true, false, false];
+  int priorityLevel = 1;
+  @override
+  void initState() {
+    super.initState();
+    _helper = DbHelper();
+    if (widget.note != null) {
+      teTitle.text = widget.note.noteTitle;
+      teDesc.text = widget.note.noteDesc;
+      priorityLevel = widget.note.notePriority;
+      isSelected = [
+        widget.note.notePriority == 1,
+        widget.note.notePriority == 2,
+        widget.note.notePriority == 3
+      ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,17 +43,41 @@ class _AddNoteState extends State<AddNote> {
           },
         ),
         title: Text(
-          'Add Note',
+          widget.note != null ? 'Edit Note' : 'Add Note',
           style: Theme.of(context).textTheme.bodyText1,
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.save),
-            onPressed: () {},
+            onPressed: () async {
+              if (widget.note == null) {
+                Note note = Note({
+                  'noteTitle': teTitle.text,
+                  'noteDesc': teDesc.text,
+                  'notePriority': priorityLevel,
+                  'noteDate': DateFormat("MMM d.yyyy").format(DateTime.now()),
+                  'noteColor': '0xffF92472',
+                });
+                await _helper.newNote(note);
+              } else {
+                Note note = Note({
+                  'noteId': widget.note.noteId,
+                  'noteTitle': teTitle.text,
+                  'noteDesc': teDesc.text,
+                  'notePriority': priorityLevel,
+                  'noteDate': widget.note.noteDate,
+                  'noteColor': '0xffF92472',
+                });
+                await _helper.updateCity(note);
+              }
+              Navigator.pop(context);
+            },
           ),
           IconButton(
             icon: Icon(Icons.delete),
-            onPressed: () {},
+            onPressed: () async {
+              await _helper.deleteNote(widget.note.noteId);
+            },
           ),
         ],
       ),
@@ -35,13 +85,36 @@ class _AddNoteState extends State<AddNote> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ToggleButtons(
+              borderRadius: BorderRadius.circular(8),
+              fillColor: Colors.green,
+              selectedBorderColor: Colors.black,
+              selectedColor: Colors.white,
+              borderWidth: 2.5,
+              onPressed: (int newIndex) {
+                setState(() {
+                  for (int index = 0; index < isSelected.length; index++) {
+                    if (index == newIndex) {
+                      isSelected[index] = true;
+                    } else {
+                      isSelected[index] = false;
+                    }
+                  }
+                });
+                priorityLevel = newIndex + 1;
+              },
               children: [
-                PriorityCon(priorityLevel: 'Low'),
-                PriorityCon(priorityLevel: 'High'),
-                PriorityCon(priorityLevel: 'Very High'),
+                PriorityCon(
+                  priorityLevel: 'Low',
+                ),
+                PriorityCon(
+                  priorityLevel: 'High',
+                ),
+                PriorityCon(
+                  priorityLevel: 'Very High',
+                ),
               ],
+              isSelected: isSelected,
             ),
             Container(
               height: 80,
@@ -56,17 +129,21 @@ class _AddNoteState extends State<AddNote> {
                     borderRadius: BorderRadius.circular(40),
                     border: Border.all(color: Colors.black, width: 2.5),
                   ),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.check,
-                      size: 20,
+                  child: Visibility(
+                    visible: false,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.check,
+                        size: 20,
+                      ),
+                      onPressed: () {},
                     ),
-                    onPressed: () {},
                   ),
                 ),
               ),
             ),
             TextField(
+              controller: teTitle,
               style: TextStyle(fontWeight: FontWeight.bold),
               maxLength: 255,
               decoration: InputDecoration(
@@ -76,6 +153,7 @@ class _AddNoteState extends State<AddNote> {
               ),
             ),
             TextField(
+              controller: teDesc,
               keyboardType: TextInputType.multiline,
               maxLines: 15,
               maxLength: 255,
@@ -94,24 +172,22 @@ class _AddNoteState extends State<AddNote> {
 class PriorityCon extends StatelessWidget {
   PriorityCon({
     this.priorityLevel = 'Low',
+    this.onTap,
   });
   final String priorityLevel;
+  final Function onTap;
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-        decoration: BoxDecoration(
-            color: Colors.green,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.black, width: 2.5)),
         child: Text(
           priorityLevel,
-          style: Theme.of(context)
-              .textTheme
-              .headline1
-              .copyWith(color: Colors.white),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
       ),
     );
