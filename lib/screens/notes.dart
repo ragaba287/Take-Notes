@@ -87,7 +87,10 @@ class _NotesState extends State<Notes> {
             itemCount: snapshot.data.length,
             itemBuilder: (context, index) {
               Note note = Note.fromMap(snapshot.data[index]);
-              return InkWell(
+              int noteColor = int.parse(note.noteColor.substring(6, 16));
+              return NoteCon(
+                note: note,
+                noteColor: noteColor,
                 onTap: () {
                   Navigator.push(
                       context,
@@ -97,62 +100,6 @@ class _NotesState extends State<Notes> {
                         ),
                       )).then(refreshOnBack);
                 },
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18),
-                  margin: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 2.5,
-                      )),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            note.noteTitle,
-                            style: Theme.of(context).textTheme.headline1,
-                          ),
-                          Spacer(),
-                          Row(
-                            children: List.generate(
-                              note.notePriority,
-                              (index) => SizedBox(
-                                width: 10,
-                                child: Icon(
-                                  Icons.priority_high_rounded,
-                                  color: note.notePriority == 1
-                                      ? Colors.green
-                                      : note.notePriority == 2
-                                          ? Colors.yellow
-                                          : Colors.red,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 15),
-                      Text(
-                        note.noteDesc,
-                        style: Theme.of(context).textTheme.subtitle1,
-                      ),
-                      SizedBox(height: 5),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          note.noteDate,
-                          style: TextStyle(
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             },
           );
@@ -173,6 +120,89 @@ class _NotesState extends State<Notes> {
             color: Colors.black,
             width: 2.5,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class NoteCon extends StatelessWidget {
+  const NoteCon({
+    @required this.note,
+    @required this.noteColor,
+    @required this.onTap,
+  });
+
+  final Note note;
+  final int noteColor;
+  final Function onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18),
+        margin: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+            color: Color(noteColor),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Colors.black,
+              width: 2.5,
+            )),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  note.noteTitle,
+                  style: Theme.of(context).textTheme.headline1.copyWith(
+                        color: noteColor == 0xff000000
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                ),
+                Spacer(),
+                Row(
+                  children: List.generate(
+                    note.notePriority,
+                    (index) => SizedBox(
+                      width: 10,
+                      child: Icon(
+                        Icons.priority_high_rounded,
+                        color: note.notePriority == 1
+                            ? Colors.green
+                            : note.notePriority == 2
+                                ? Colors.yellow
+                                : Colors.red,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 15),
+            Text(
+              note.noteDesc,
+              style: Theme.of(context).textTheme.subtitle1.copyWith(
+                    color:
+                        noteColor == 0xff000000 ? Colors.white : Colors.black,
+                  ),
+            ),
+            SizedBox(height: 5),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                note.noteDate,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: noteColor == 0xff000000 ? Colors.white : Colors.black,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

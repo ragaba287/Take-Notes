@@ -51,15 +51,6 @@ class DbHelper {
     return db.query(_NotesTable);
   }
 
-  Future<int> deleteNote(int id) async {
-    Database db = await createDatabase();
-    return db.delete(
-      _NotesTable,
-      where: '$_NoteId = ?',
-      whereArgs: [id],
-    );
-  }
-
   Future<int> updateCity(Note note) async {
     Database db = await createDatabase();
     return db.update(
@@ -68,5 +59,19 @@ class DbHelper {
       where: '$_NoteId = ?',
       whereArgs: [note.noteId],
     );
+  }
+
+  Future<int> deleteNote(Note note) async {
+    Database db = await createDatabase();
+    return db.delete(
+      _NotesTable,
+      where: '$_NoteId = ?',
+      whereArgs: [note.noteId],
+    );
+  }
+
+  Future deleteAll() async {
+    Database db = await createDatabase();
+    db.delete(_NotesTable);
   }
 }
